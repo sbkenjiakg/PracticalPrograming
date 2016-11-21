@@ -26,13 +26,13 @@ public class LexicalUnit {
     public String toString() {
         switch (type) {
             case LITERAL:
-                return "LITERAL:" + value.getSValue();
+                return "" + value.getSValue();
             case NAME:
-                return "NAME:" + value.getSValue();
+                return "" + value.getSValue();
             case DOUBLEVAL:
-                return "DOUBLEVAL:" + value.getSValue();
+                return "" + value.getSValue();
             case INTVAL:
-                return "INTVAL:" + value.getIValue();
+                return "" + value.getIValue();
             case IF:
                 return ("IF");
             case THEN:
@@ -99,6 +99,8 @@ public class LexicalUnit {
                 return ("ENDIF");
             case DO:
                 return ("DO");
+            case PRINT:
+                return ("PRINT");
         }
         return "";
     }

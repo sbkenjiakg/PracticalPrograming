@@ -19,9 +19,9 @@ public class Main{
            LexicalUnit lu = lai.get();
            try{
                if(lu.type == LexicalType.EOF) break;
-               System.out.println(lu.toString());
-           }catch(NullPointerException npe){
-               System.out.println(npe.getMessage());
+               System.out.println(lu.toString() +"," + lu.getType());
+          }catch(NullPointerException npe){
+               //System.out.println(npe.getMessage());
            }
            
        }
