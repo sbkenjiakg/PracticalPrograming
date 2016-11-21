@@ -173,11 +173,16 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
         }
     }
 
+    /**
+     * "で始まる文字列を読み込んで"で終わる
+     *
+     * @param c
+     * @return LexicalUnit
+     * @throws Exception
+     */
     private LexicalUnit getLiteral(char c) throws Exception {
         String str = "";
         while (true) {
-            str += c;
-
             int ci = source.read();
             if (ci == -1) {
                 break;
@@ -186,6 +191,7 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
             if (c == '"') {
                 break;
             }
+            str += c;
         }
         return new LexicalUnit(LexicalType.LITERAL, new ValueImp(str));
     }
@@ -199,15 +205,16 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
      */
     private LexicalUnit getSpecial(char c) throws Exception {
         String str = "";
+        if (c == ' ') return null;
+        
         while (true) {
             str += c;
+
             int ci = source.read();
-            if (ci == -1) {
-                break;
-            }
+            if (ci == -1) break;          
             c = (char) ci;
 
-            if (c == ' ') {
+            if (c == ' ' || isAlpha(c) || isNumeric(c)) {
                 source.unread(ci);
                 break;
             }
