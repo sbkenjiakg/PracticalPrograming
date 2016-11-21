@@ -17,6 +17,7 @@ import java.util.Map;
  * @author sbkenjiakg
  */
 public class LexicalAnalyzerImp implements LexicalAnalyzer {
+
     PushbackReader source;
     Map<String, LexicalUnit> reservedMap;
 
@@ -25,28 +26,28 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
         source = new PushbackReader(r);
         createMap();
     }
-    
-     public LexicalAnalyzerImp(InputStream is) throws Exception {
+
+    public LexicalAnalyzerImp(InputStream is) throws Exception {
         Reader r = new java.io.InputStreamReader(is);
         source = new PushbackReader(r);
         createMap();
     }
-     
-     /**
-      * 予約語を収納したMapを生成する
-      */
-     public void createMap(){
+
+    /**
+     * 予約語を収納したMapを生成する
+     */
+    public void createMap() {
         reservedMap = new HashMap<String, LexicalUnit>();
-        reservedMap.put("LITERAL", new LexicalUnit(LexicalType.LITERAL));
-        reservedMap.put("DO", new LexicalUnit(LexicalType.DO));
-        reservedMap.put("=", new LexicalUnit(LexicalType.EQ));
+        for (LexicalType lt : LexicalType.values()) {
+            reservedMap.put(lt.toString(), new LexicalUnit(lt));
+        }
     }
-    
+
     /**
      * 先読みしたPushBackReaderの中身を1文字読み出す
-     * 
+     *
      * @return LexicalUnit
-     * 
+     *
      */
     @Override
     public LexicalUnit get() throws Exception {
@@ -57,13 +58,15 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
 
         char c = (char) ci;
         if (isAlpha(c)) {                               //先頭の文字がアルファベットの時の処理         
-            return getAlpha(c);                         
-        }else if (isNumeric(c)) {                       //先頭の文字が数字の時の処理   
-           return getNumeric(c);                        
-        }else{                                          //数字、アルファベット以外の時の処理
-           return getLiteral(c);
+            return getAlpha(c);
+        } else if (isNumeric(c)) {                       //先頭の文字が数字の時の処理   
+            return getNumeric(c);
+        } else if (c == '"') {                                          //数字、アルファベット以外の時の処理
+            return getLiteral(c);
+        } else {
+            return getSpecial(c);
         }
-        
+
     }
 
     @Override
@@ -78,8 +81,9 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
 
     /**
      * 引数がアルファベットかどうか判定する
+     *
      * @param c
-     * @return 
+     * @return
      */
     private boolean isAlpha(char c) {
         if ('a' <= c && 'z' >= c) {
@@ -93,8 +97,9 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
 
     /**
      * 引数が数字かどうか判定する
+     *
      * @param c
-     * @return 
+     * @return
      */
     private boolean isNumeric(char c) {
         if ('0' <= c && '9' >= c) {
@@ -102,12 +107,13 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
         }
         return false;
     }
-    
+
     /**
      * アルファベットを読み出す
+     *
      * @param c
      * @return
-     * @throws Exception 
+     * @throws Exception
      */
     private LexicalUnit getAlpha(char c) throws Exception {
         String str = "";
@@ -119,8 +125,8 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
                 break;
             }
             c = (char) ci;
-      
-            if(!isAlpha(c) && !isNumeric(c)) {
+
+            if (!isAlpha(c) && !isNumeric(c)) {
                 //アルファベットでも数字でもなかった場合はsourceから読み出さずにブレイク
                 source.unread(ci);
                 break;
@@ -128,17 +134,20 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
         }
         //予約語の確認
         LexicalUnit lu = reservedMap.get(str);
-        if(lu != null) return lu;
-        return new LexicalUnit(LexicalType.NAME, new ValueImp(str));
+        if (lu != null) {
+            return lu;
+        }
+        return new LexicalUnit(LexicalType.LITERAL, new ValueImp(str.trim()));
     }
 
     /**
      * 数字の読み出し
+     *
      * @param c
      * @return
-     * @throws Exception 
+     * @throws Exception
      */
-    private LexicalUnit getNumeric(char c) throws Exception{
+    private LexicalUnit getNumeric(char c) throws Exception {
         String str = "";
         while (true) {
             str += c;
@@ -148,42 +157,96 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
                 break;
             }
             c = (char) ci;
-            
-            if(!isAlpha(c) && !isNumeric(c)) {
+
+            if (!isAlpha(c) && !isNumeric(c)) {
                 //アルファベットでも数字でもなかった場合はsourceから読み出さずにブレイク
                 source.unread(ci);
                 break;
             }
         }
-        
-        try{
-            return new LexicalUnit(LexicalType.INTVAL, new ValueImp(Integer.parseInt(str)));
-        }catch(Exception e){
+
+        try {
+            return new LexicalUnit(LexicalType.INTVAL, new ValueImp(Integer.parseInt(str.trim())));
+        } catch (Exception e) {
             //整数型にキャストできなかったとき
-            return new LexicalUnit(LexicalType.NAME, new ValueImp(str));
+            return new LexicalUnit(LexicalType.LITERAL, new ValueImp(str.trim()));
         }
     }
 
-    private LexicalUnit getLiteral(char c) throws Exception{
+    private LexicalUnit getLiteral(char c) throws Exception {
         String str = "";
         while (true) {
-            //改行と空白が来たらブレイク
-            
             str += c;
-            
+
             int ci = source.read();
-            if (ci == -1) break;
-            c = (char) ci;
-            if(isNumeric(c) || isAlpha(c)){
-                source.unread(ci);
+            if (ci == -1) {
                 break;
             }
-            
+            c = (char) ci;
+            if (c == '"') {
+                break;
+            }
         }
-        
-        LexicalUnit lu = reservedMap.get(str);
-        if(lu != null) return lu;
         return new LexicalUnit(LexicalType.LITERAL, new ValueImp(str));
     }
 
+    /**
+     * ドットやイコールなどの特殊記号
+     *
+     * @param c
+     * @return
+     * @throws Exception
+     */
+    private LexicalUnit getSpecial(char c) throws Exception {
+        String str = "";
+        while (true) {
+            str += c;
+            int ci = source.read();
+            if (ci == -1) {
+                break;
+            }
+            c = (char) ci;
+
+            if (c == ' ') {
+                source.unread(ci);
+                break;
+            }
+        }
+        switch (str) {
+            case "=":
+                return new LexicalUnit(LexicalType.EQ);
+            case "<":
+                return new LexicalUnit(LexicalType.LT);
+            case ">":
+                return new LexicalUnit(LexicalType.GT);
+            case "<=":
+            case "=<":
+                return new LexicalUnit(LexicalType.LE);
+            case ">=":
+            case "=>":
+                return new LexicalUnit(LexicalType.GE);
+            case "<>":
+                return new LexicalUnit(LexicalType.NE);
+            case ".":
+                return new LexicalUnit(LexicalType.DOT);
+            case "+":
+                return new LexicalUnit(LexicalType.ADD);
+            case "-":
+                return new LexicalUnit(LexicalType.SUB);
+            case "*":
+                return new LexicalUnit(LexicalType.MUL);
+            case "/":
+                return new LexicalUnit(LexicalType.DIV);
+            case ")":
+                return new LexicalUnit(LexicalType.LP);
+            case "(":
+                return new LexicalUnit(LexicalType.RP);
+            case ",":
+                return new LexicalUnit(LexicalType.COMMA);
+            case "\n":
+                return new LexicalUnit(LexicalType.NL);
+        }
+
+        return null;
+    }
 }
