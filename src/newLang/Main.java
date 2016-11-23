@@ -5,26 +5,22 @@
  */
 package newLang;
 
+import java.io.FileInputStream;
 
 /**
  *
  * @author sbkenjiakg
  */
-public class Main{
-    
-    public static void main(String[] args) throws Exception{
-       
-        LexicalAnalyzerImp lai = new LexicalAnalyzerImp();
-        while(true){
-           LexicalUnit lu = lai.get();
-           try{
-               if(lu.type == LexicalType.EOF) break;
-               System.out.println(lu.toString() +"," + lu.getType());
-          }catch(NullPointerException npe){
-               //System.out.println(npe.getMessage());
-           }
-           
-       }
-    }   
-}
+public class Main {
 
+    public static void main(String[] args) throws Exception {
+
+        LexicalAnalyzerImp lai = new LexicalAnalyzerImp();
+
+        LexicalUnit lu = lai.get();
+
+        if (lu.type == LexicalType.EOF) {
+            // break;
+        }
+    }
+}

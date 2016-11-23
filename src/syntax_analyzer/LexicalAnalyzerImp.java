@@ -1,42 +1,30 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package newLang;
+
+package syntax_analyzer;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.util.HashMap;
-import java.util.Map;
 
-/**
- *
- * @author sbkenjiakg
- */
+
 public class LexicalAnalyzerImp implements LexicalAnalyzer {
-
     PushbackReader source;
-    Map<String, LexicalUnit> reservedMap;
+    HashMap<String, LexicalUnit> reservedMap;
 
     public LexicalAnalyzerImp() throws Exception {
-        Reader r = new java.io.InputStreamReader(new FileInputStream("src/newLang/test1.bas"));
+        Reader r = new InputStreamReader(new FileInputStream("src/newLang/test1.bas"));
         source = new PushbackReader(r);
-        createMap();
+        reservedMap = new HashMap<String, LexicalUnit>();
+        for (LexicalType lt : LexicalType.values()) {
+            reservedMap.put(lt.toString(), new LexicalUnit(lt));
+        }
     }
 
     public LexicalAnalyzerImp(InputStream is) throws Exception {
-        Reader r = new java.io.InputStreamReader(is);
+        Reader r = new InputStreamReader(is);
         source = new PushbackReader(r);
-        createMap();
-    }
-
-    /**
-     * 予約語を収納したMapを生成する
-     */
-    public void createMap() {
         reservedMap = new HashMap<String, LexicalUnit>();
         for (LexicalType lt : LexicalType.values()) {
             reservedMap.put(lt.toString(), new LexicalUnit(lt));
@@ -48,15 +36,15 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
      * @return LexicalUnit
      */
     @Override
-    public LexicalUnit get() throws Exception {
-        while(true){
+     public LexicalUnit get() throws Exception {
+        while(true){  
             LexicalUnit lu;
+            
             int ci = source.read();
-            if (ci == -1) {
-                return new LexicalUnit(LexicalType.EOF);    //終末記号
-            }
-
+            if (ci == -1) return new LexicalUnit(LexicalType.EOF);    //終末記号
+            
             char c = (char) ci;
+            
             if (c == ' '){
             }else{
                 if (isAlpha(c)) {                               //先頭の文字がアルファベットの時の処理         
