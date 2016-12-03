@@ -6,7 +6,6 @@ public class Node {
     
     public Node next;
 
-    /** Creates a new instance of Node */
     public Node() {
     }
     public Node(NodeType my_type) {

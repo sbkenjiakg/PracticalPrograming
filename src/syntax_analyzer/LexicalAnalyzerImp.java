@@ -37,7 +37,7 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
      */
     @Override
      public LexicalUnit get() throws Exception {
-        while(true){  
+        //while(true){  
             LexicalUnit lu;
             
             int ci = source.read();
@@ -46,6 +46,7 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
             char c = (char) ci;
             
             if (c == ' '){
+                lu = this.get();
             }else{
                 if (isAlpha(c)) {                               //先頭の文字がアルファベットの時の処理         
                     lu = getAlpha(c);
@@ -56,9 +57,10 @@ public class LexicalAnalyzerImp implements LexicalAnalyzer {
                 } else{
                     lu = getSpecial(c);
                 }
-                System.out.println(lu.toString() + "," + lu.getType());
+                //System.out.println(lu.toString() + "," + lu.getType());
             }
-        }
+            return lu;
+        //}
     }
 
     @Override
